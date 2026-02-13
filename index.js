@@ -91,7 +91,7 @@ client.on('guildMemberRemove', async (member) => {
     const embed = new EmbedBuilder()
         .setColor("#ff2e2e")
         .setTitle("👋 A Citizen Has Left")
-        .setDescription(`${member.user.tag} has left the city.`)
+        .setDescription(`${member.user.tag} has left the city, we currently have [memberCount] members left.`)
         .setTimestamp();
 
     channel.send({ embeds: [embed] });
