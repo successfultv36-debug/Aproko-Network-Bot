@@ -66,13 +66,12 @@ client.on('guildMemberAdd', async (member) => {
 🏙 Immersive city life & progression  
 🎮 Serious RP environment  
 
-🔓 **To unlock the server:**
+🔓 **To unlock the server/ Get WhiteList:**
 
-1️⃣ Read #server-rules  
-2️⃣ React with ✅ for Rules Accepted Role  
-3️⃣ React with ✅ in #whitelist-access  
+1️⃣ Read https://discord.com/channels/1468263078109118633/1468274606707183656 and React with :ballot_box_with_check:  to get Rules Accepted Role   
+2️⃣ Then you gain access to the https://discord.com/channels/1468263078109118633/1468274725821353985 and React to the post in https://discord.com/channels/1468263078109118633/1468274725821353985 with ✅
 
-You will receive the Citizen role and full access.`
+You will receive the Citizen role, get WhiteListed and full access.`
         )
         .setFooter({ text: `Member #${member.guild.memberCount}` })
         .setTimestamp();
