@@ -170,88 +170,176 @@ We currently have **${member.guild.memberCount}** members left.`
 
 /* ================= WHITELIST VERIFY SYSTEM ================= */
 
-client.on("interactionCreate", async interaction => {
+client.on("interactionCreate", async (interaction) => {
+    // ===== Slash Commands =====
+    if (interaction.isChatInputCommand()) {
 
-    if (!interaction.isChatInputCommand()) return;
-    if (interaction.commandName !== "verify") return;
+        // ----- /verify command -----
+        if (interaction.commandName === "verify") {
 
-    // Restrict to WL channel
-    if (interaction.channel.id !== WL_CHANNEL_ID) {
-        return interaction.reply({
-            content: "❌ This command can only be used in the whitelist channel.",
-            ephemeral: true
-        });
+            // Restrict to whitelist channel
+            if (interaction.channel.id !== WL_CHANNEL_ID) {
+                return interaction.reply({
+                    content: "❌ This command can only be used in the whitelist channel.",
+                    ephemeral: true
+                });
+            }
 
-    if (interaction.isChatInputCommand() && interaction.commandName === "announcewl") {
+            const staffMember = interaction.member;
 
-    const staffMember = interaction.member;
-    const hasPermission = staffMember.roles.cache.some(role =>
-        WL_STAFF_ROLE_IDS.includes(role.id)
-    );
+            // Check if staff has permission
+            const hasPermission = staffMember.roles.cache.some(role =>
+                WL_STAFF_ROLE_IDS.includes(role.id)
+            );
 
-    if (!hasPermission) {
-        return interaction.reply({ content: "❌ You do not have permission.", ephemeral: true });
-    }
+            if (!hasPermission) {
+                return interaction.reply({
+                    content: "❌ You do not have permission to use this command.",
+                    ephemeral: true
+                });
+            }
 
-    // Defer reply to prevent timeout
-    await interaction.deferReply({ ephemeral: false });
+            const targetUser = interaction.options.getUser("user");
+            const targetMember = interaction.guild.members.cache.get(targetUser.id);
 
-    const { ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
+            if (!targetMember) {
+                return interaction.reply({
+                    content: "User not found.",
+                    ephemeral: true
+                });
+            }
 
-    const row = new ActionRowBuilder().addComponents(
-        new ButtonBuilder()
-            .setCustomId('wl_reminder')
-            .setLabel("I'm Ready")
-            .setStyle(ButtonStyle.Primary)
-    );
+            const citizenRole = interaction.guild.roles.cache.get(CITIZEN_ROLE_ID);
+            if (!citizenRole) {
+                return interaction.reply({
+                    content: "Citizen role not found.",
+                    ephemeral: true
+                });
+            }
 
-    const embed = new EmbedBuilder()
-        .setColor("#ff9900")
-        .setTitle("🚨 Attention Unverified Citizens!")
-        .setDescription(
-`Hey there, <@&1468265641550020618> — yes, **you**, the ones still wandering around like lost NPCs.  
+            // Prevent double verify
+            if (targetMember.roles.cache.has(CITIZEN_ROLE_ID)) {
+                return interaction.reply({
+                    content: "⚠ This user is already whitelisted.",
+                    ephemeral: true
+                });
+            }
+
+            // Give Citizen role
+            await targetMember.roles.add(citizenRole);
+
+            // React to user's WL message
+            try {
+                const messages = await interaction.channel.messages.fetch({ limit: 30 });
+                const wlMessage = messages.find(msg =>
+                    msg.author.id === targetUser.id &&
+                    msg.content.toLowerCase().trim() === "wl"
+                );
+
+                if (wlMessage) await wlMessage.react("✅");
+            } catch {}
+
+            // Public confirmation
+            await interaction.reply({
+                content: `🎉 ${targetUser} You are now a Citizen of Aproko Network, you can use the connect channel to fly in now.`,
+                ephemeral: false
+            });
+
+            // Log verification
+            const logChannel = interaction.guild.channels.cache.get(WL_LOG_CHANNEL_ID);
+            if (logChannel) {
+                logChannel.send({
+                    embeds: [
+                        new EmbedBuilder()
+                            .setColor("#00c3ff")
+                            .setTitle("Whitelist Verification Log")
+                            .setDescription(
+`👤 **User:** ${targetUser.tag}
+🛡 **Verified By:** ${interaction.user.tag}
+🕒 **Time:** <t:${Math.floor(Date.now() / 1000)}:F>`
+                            )
+                            .setTimestamp()
+                    ]
+                });
+            }
+
+        } // end /verify
+
+        // ----- /announcewl command -----
+        if (interaction.commandName === "announcewl") {
+
+            const staffMember = interaction.member;
+            const hasPermission = staffMember.roles.cache.some(role =>
+                WL_STAFF_ROLE_IDS.includes(role.id)
+            );
+
+            if (!hasPermission) {
+                return interaction.reply({ content: "❌ You do not have permission.", ephemeral: true });
+            }
+
+            // Defer reply to prevent timeout
+            await interaction.deferReply({ ephemeral: false });
+
+            const { ActionRowBuilder, ButtonBuilder, ButtonStyle } = require("discord.js");
+
+            const row = new ActionRowBuilder().addComponents(
+                new ButtonBuilder()
+                    .setCustomId("wl_reminder")
+                    .setLabel("I'm Ready")
+                    .setStyle(ButtonStyle.Primary)
+            );
+
+            const embed = new EmbedBuilder()
+                .setColor("#ff9900")
+                .setTitle("🚨 Attention Unverified Citizens!")
+                .setDescription(
+`Hey there, <@&1468265641550020618> — yes, **you**, the ones still wandering around like lost NPCs.
 
 The whitelist process is now **shockingly easy**:  
 1️⃣ Go to <#1468274725821353985> (Whitelist Access)  
 2️⃣ Type \`WL\`  
-3️⃣ Wait for one of our glorious staff members to react ✅  
+3️⃣ Wait for one of our glorious staff members to react ✅
 
-Boom — **Citizen role granted**, full access unlocked. Now you can explore Aproko Network and finally start creating your stories… instead of just lurking.  
+Boom — **Citizen role granted**, full access unlocked. Now you can explore Aproko Network and finally start creating your stories… instead of just lurking.
 
 Try not to get lost this time 😉`
-        )
-        .setFooter({ text: "Aproko Network | We make RP almost too easy" })
-        .setTimestamp();
+                )
+                .setFooter({ text: "Aproko Network | We make RP almost too easy" })
+                .setTimestamp();
 
-    // Send embed with button
-    await interaction.editReply({ 
-        content: "<@&1468265641550020618>", 
-        embeds: [embed], 
-        components: [row] 
-    });
-}
-        if (interaction.isButton() && interaction.customId === "wl_reminder") {
-
-    try {
-        // Ephemeral response to user
-        await interaction.reply({
-            content: `👍 Got it! Remember: go to #whitelist-access and type WL to get verified.`,
-            ephemeral: true
-        });
-
-        // Log the click in staff channel
-        const logChannel = interaction.guild.channels.cache.get(BUTTON_LOG_CHANNEL_ID);
-        if (logChannel) {
-            logChannel.send({
-                content: `📝 **Button Click Logged:** ${interaction.user.tag} clicked "I'm Ready" at <t:${Math.floor(Date.now() / 1000)}:F>`
+            // Send embed with button
+            await interaction.editReply({
+                content: "<@&1468265641550020618>",
+                embeds: [embed],
+                components: [row]
             });
-        }
 
-    } catch (err) {
-        console.log("Button interaction failed:", err);
+        } // end /announcewl
+    } // end isChatInputCommand
+
+    // ===== Button Interaction =====
+    if (interaction.isButton() && interaction.customId === "wl_reminder") {
+        try {
+            // Ephemeral response to user
+            await interaction.reply({
+                content: `👍 Got it! Remember: go to #whitelist-access and type WL to get verified.`,
+                ephemeral: true
+            });
+
+            // Log the click
+            const logChannel = interaction.guild.channels.cache.get(BUTTON_LOG_CHANNEL_ID);
+            if (logChannel) {
+                logChannel.send({
+                    content: `📝 **Button Click Logged:** ${interaction.user.tag} clicked "I'm Ready" at <t:${Math.floor(Date.now() / 1000)}:F>`
+                });
+            }
+
+        } catch (err) {
+            console.log("Button interaction failed:", err);
+        }
     }
-}
-    }
+
+});
 
     const staffMember = interaction.member;
 
