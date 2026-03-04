@@ -193,6 +193,9 @@ client.on("interactionCreate", async interaction => {
         return interaction.reply({ content: "❌ You do not have permission.", ephemeral: true });
     }
 
+    // Defer reply to prevent timeout
+    await interaction.deferReply({ ephemeral: false });
+
     const { ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 
     const row = new ActionRowBuilder().addComponents(
@@ -220,7 +223,8 @@ Try not to get lost this time 😉`
         .setFooter({ text: "Aproko Network | We make RP almost too easy" })
         .setTimestamp();
 
-    await interaction.reply({ 
+    // Send embed with button
+    await interaction.editReply({ 
         content: "<@&1468265641550020618>", 
         embeds: [embed], 
         components: [row] 
