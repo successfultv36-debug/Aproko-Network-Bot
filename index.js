@@ -31,6 +31,7 @@ const CITIZEN_ROLE_ID = "1468806482228412699";
 // Channels
 const WELCOME_CHANNEL_NAME = "welcome-to-aproko";
 const DEPARTURE_CHANNEL_ID = "1468685129655390274";
+const BUTTON_LOG_CHANNEL_ID = "1478886734614757458"; // logs who clicked the "I'm Ready" button
 
 const WL_CHANNEL_ID = "1468274725821353985";
 const WL_LOG_CHANNEL_ID = "1478870142329815070";
@@ -69,6 +70,10 @@ client.once("clientReady", async () => {
             }
         ]
     });
+    await guild.commands.create({
+    name: "announcewl",
+    description: "Announce sarcastic WL process to unverified members"
+});
 });
 
 /* ================= INVITE TRACKER ================= */
@@ -176,6 +181,68 @@ client.on("interactionCreate", async interaction => {
             content: "❌ This command can only be used in the whitelist channel.",
             ephemeral: true
         });
+
+    if (interaction.isChatInputCommand() && interaction.commandName === "announcewl") {
+
+    const staffMember = interaction.member;
+    const hasPermission = staffMember.roles.cache.some(role =>
+        WL_STAFF_ROLE_IDS.includes(role.id)
+    );
+
+    if (!hasPermission) {
+        return interaction.reply({ content: "❌ You do not have permission.", ephemeral: true });
+    }
+
+    const { ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
+
+    const row = new ActionRowBuilder().addComponents(
+        new ButtonBuilder()
+            .setCustomId('wl_reminder')
+            .setLabel("I'm Ready")
+            .setStyle(ButtonStyle.Primary)
+    );
+
+    const embed = new EmbedBuilder()
+        .setColor("#ff9900")
+        .setTitle("🚨 Attention Unverified Citizens!")
+        .setDescription(
+`Hey there, <@&1468265641550020618> — yes, **you**, the ones still wandering around like lost NPCs.  
+
+The whitelist process is now **shockingly easy**:  
+1️⃣ Go to <#1468274725821353985> (Whitelist Access)  
+2️⃣ Type \`WL\`  
+3️⃣ Wait for one of our glorious staff members to react ✅  
+
+Boom — **Citizen role granted**, full access unlocked. Now you can explore Aproko Network and finally start creating your stories… instead of just lurking.  
+
+Try not to get lost this time 😉`
+        )
+        .setFooter({ text: "Aproko Network | We make RP almost too easy" })
+        .setTimestamp();
+
+    await interaction.reply({ 
+        content: "<@&1468265641550020618>", 
+        embeds: [embed], 
+        components: [row] 
+    });
+}
+        if (interaction.isButton() && interaction.customId === "wl_reminder") {
+
+    // Reply ephemerally to the user
+    await interaction.reply({
+        content: `👍 Got it! Remember: go to #whitelist-access and type WL to get verified.`,
+        ephemeral: true
+    });
+
+    // Log to button log channel
+    const logChannel = interaction.guild.channels.cache.get(BUTTON_LOG_CHANNEL_ID);
+
+    if (logChannel) {
+        logChannel.send({
+            content: `📝 **Button Click Logged:** ${interaction.user.tag} clicked "I'm Ready" at <t:${Math.floor(Date.now() / 1000)}:F>`
+        });
+    }
+}
     }
 
     const staffMember = interaction.member;
