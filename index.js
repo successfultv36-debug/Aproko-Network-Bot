@@ -37,6 +37,7 @@ const DEPARTURE_CHANNEL_ID = "1468685129655390274";
 const BUTTON_LOG_CHANNEL_ID = "1478886734614757458";
 const WL_CHANNEL_ID = "1468274725821353985";
 const WL_LOG_CHANNEL_ID = "1478870142329815070";
+const SERVER_RULES = "1468274606707183656";
 
 // Unverified Role ID
 const UNVERIFIED_ROLE_ID = "1468265641550020618"; // example
@@ -122,7 +123,7 @@ client.on("guildMemberAdd", async member => {
 
 🔓 **To Get Whitelisted:**
 
-1️⃣ Read the rules and accept them  
+1️⃣ Read the <#${SERVER_RULES}> and accept them  
 2️⃣ Go to the whitelist channel <#${WL_CHANNEL_ID}> and type \`WL\`  
 3️⃣ Wait for staff verification  
 
