@@ -30,7 +30,7 @@ const CITIZEN_ROLE_ID = "1468806482228412699";
 
 // Channels
 const WELCOME_CHANNEL_NAME = "welcome-to-aproko";
-const DEPARTURE_CHANNEL_NAME = "departures";
+const DEPARTURE_CHANNEL_ID = "1468685129655390274";
 
 const WL_CHANNEL_ID = "1468274725821353985";
 const WL_LOG_CHANNEL_ID = "1478870142329815070";
@@ -84,19 +84,24 @@ client.on("inviteCreate", async invite => {
 
 client.on("guildMemberAdd", async (member) => {
 
-    let usedInvite = null;
+    let inviterTag = "Unknown";
 
     try {
         const newInvites = await member.guild.invites.fetch();
         const oldInvites = invites.get(member.guild.id);
 
-        usedInvite = newInvites.find(inv =>
+        const usedInvite = newInvites.find(inv =>
             oldInvites && oldInvites.get(inv.code)?.uses < inv.uses
         );
 
+        if (usedInvite && usedInvite.inviter) {
+            inviterTag = usedInvite.inviter.tag;
+        }
+
         invites.set(member.guild.id, newInvites);
+
     } catch {
-        console.log("Invite tracking failed.");
+        console.log("Invite detection failed.");
     }
 
     const channel = member.guild.channels.cache.find(
@@ -108,13 +113,12 @@ client.on("guildMemberAdd", async (member) => {
     const embed = new EmbedBuilder()
         .setColor("#00c3ff")
         .setTitle("🚀 Welcome to Aproko Network")
-        .setImage("https://i.ibb.co/DfptNQSw/da643ccc-fc9b-429e-a65b-72b29b68203e.jpg")
         .setThumbnail(member.user.displayAvatarURL({ dynamic: true }))
+        .setImage("https://i.ibb.co/DfptNQSw/da643ccc-fc9b-429e-a65b-72b29b68203e.jpg")
         .setDescription(
 `Welcome ${member} to **${member.guild.name}** — a premium GTA V FiveM roleplay city.
 
-📨 **Joined via:** ${usedInvite?.inviter?.tag || "Unknown"}
-🔑 **Invite Code:** ${usedInvite?.code || "Unknown"}
+📨 **Invited By:** ${inviterTag}
 
 ━━━━━━━━━━━━━━━━━━━━━━
 
@@ -124,8 +128,8 @@ client.on("guildMemberAdd", async (member) => {
 
 🔓 **To Get Whitelisted:**
 
-1️⃣ Read the rules and accept them  
-2️⃣ Go to the WL channel and type \`WL\`  
+1️⃣ Read the https://discord.com/channels/1468263078109118633/1468274606707183656 and accept them  
+2️⃣ Go to the https://discord.com/channels/1468263078109118633/1468274725821353985 channel and type \`WL\`  
 3️⃣ Wait for staff verification  
 
 You will receive the Citizen role and full access.`
@@ -140,17 +144,20 @@ You will receive the Citizen role and full access.`
 
 client.on("guildMemberRemove", async (member) => {
 
-    const channel = member.guild.channels.cache.find(
-        ch => ch.name === DEPARTURE_CHANNEL_NAME
-    );
+    const channel = member.guild.channels.cache.get(DEPARTURE_CHANNEL_ID);
 
-    if (!channel) return;
+    if (!channel) {
+        console.log("Departure channel not found.");
+        return;
+    }
 
     const embed = new EmbedBuilder()
         .setColor("#ff2e2e")
         .setTitle("👋 A Citizen Has Left")
         .setDescription(
-`${member.user.tag} has left the city.\n\nWe now have **${member.guild.memberCount}** members remaining.`
+`${member.user.tag} has left the city.
+
+We now have **${member.guild.memberCount}** members remaining.`
         )
         .setTimestamp();
 
