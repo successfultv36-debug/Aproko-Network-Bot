@@ -146,7 +146,7 @@ client.on("guildMemberRemove", async (member) => {
 
     const channel = member.guild.channels.cache.get(DEPARTURE_CHANNEL_ID);
 
-    if (!channel) {
+        if (!channel) {
         console.log("Departure channel not found.");
         return;
     }
@@ -155,9 +155,8 @@ client.on("guildMemberRemove", async (member) => {
         .setColor("#ff2e2e")
         .setTitle("👋 A Citizen Has Left")
         .setDescription(
-`${member.user.tag} has left the city.
-
-We now have **${member.guild.memberCount}** members remaining.`
+`${member.user.tag} has left the city.  
+We currently have **${member.guild.memberCount}** members left.`
         )
         .setTimestamp();
 
