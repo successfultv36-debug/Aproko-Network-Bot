@@ -232,19 +232,23 @@ Try not to get lost this time 😉`
 }
         if (interaction.isButton() && interaction.customId === "wl_reminder") {
 
-    // Reply ephemerally to the user
-    await interaction.reply({
-        content: `👍 Got it! Remember: go to #whitelist-access and type WL to get verified.`,
-        ephemeral: true
-    });
-
-    // Log to button log channel
-    const logChannel = interaction.guild.channels.cache.get(BUTTON_LOG_CHANNEL_ID);
-
-    if (logChannel) {
-        logChannel.send({
-            content: `📝 **Button Click Logged:** ${interaction.user.tag} clicked "I'm Ready" at <t:${Math.floor(Date.now() / 1000)}:F>`
+    try {
+        // Ephemeral response to user
+        await interaction.reply({
+            content: `👍 Got it! Remember: go to #whitelist-access and type WL to get verified.`,
+            ephemeral: true
         });
+
+        // Log the click in staff channel
+        const logChannel = interaction.guild.channels.cache.get(BUTTON_LOG_CHANNEL_ID);
+        if (logChannel) {
+            logChannel.send({
+                content: `📝 **Button Click Logged:** ${interaction.user.tag} clicked "I'm Ready" at <t:${Math.floor(Date.now() / 1000)}:F>`
+            });
+        }
+
+    } catch (err) {
+        console.log("Button interaction failed:", err);
     }
 }
     }
