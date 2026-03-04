@@ -137,20 +137,28 @@ You will receive the Citizen role and full access.`
 
 /* ================= MEMBER LEAVE ================= */
 
-client.on("guildMemberRemove", async member => {
-    const channel = member.guild.channels.cache.get(DEPARTURE_CHANNEL_ID);
-    if (!channel) return console.log("Departure channel not found.");
+/* ================= MEMBER LEAVE ================= */
 
-    const embed = new EmbedBuilder()
-        .setColor("#ff2e2e")
-        .setTitle("👋 A Citizen Has Left")
-        .setDescription(
+client.on("guildMemberRemove", async (member) => {
+    try {
+        // Fetch the channel directly
+        const channel = await member.guild.channels.fetch(DEPARTURE_CHANNEL_ID);
+        if (!channel) return console.log("Departure channel not found.");
+
+        const embed = new EmbedBuilder()
+            .setColor("#ff2e2e")
+            .setTitle("👋 A Citizen Has Left")
+            .setDescription(
 `${member.user.tag} has left the city.  
 We currently have **${member.guild.memberCount}** members left.`
-        )
-        .setTimestamp();
+            )
+            .setTimestamp();
 
-    channel.send({ embeds: [embed] });
+        await channel.send({ embeds: [embed] });
+
+    } catch (err) {
+        console.log("Failed to send departure message:", err);
+    }
 });
 
 /* ================= INTERACTIONS (SLASH & BUTTON) ================= */
