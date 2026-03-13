@@ -295,4 +295,4 @@ Citizen role granted instantly! Explore Aproko Network and start your stories.`
 
 /* ================= LOGIN ================= */
 
-client.login(process.env.TOKEN);
+client.login("MTQ2ODgyNzYxMDI0NjI4MzM0OA.Gq5vV8.1MpX4a89KE5tGNTBC7Je52I-VdQbjjQxQEExQw");
